@@ -1,0 +1,7 @@
+cli
+
+instalar pacote
+dotnet add package Microsoft.VisualStudio.Web.CodeGeneration.Design
+
+gerar controller api
+dotnet aspnet-codegenerator controller -name usuarioController  --relativeFolderPath Controllers -api --force
