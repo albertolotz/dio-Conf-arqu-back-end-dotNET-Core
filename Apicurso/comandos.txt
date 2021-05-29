@@ -5,3 +5,24 @@ dotnet add package Microsoft.VisualStudio.Web.CodeGeneration.Design
 
 gerar controller api
 dotnet aspnet-codegenerator controller -name usuarioController  --relativeFolderPath Controllers -api --force
+
+
+Autenticação
+dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer --version 5.0.6
+dotnet add package Microsoft.AspNetCore.Authentication --version 2.2.0
+
+
+EntityFrameworkCore
+dotnet add package Microsoft.EntityFrameworkCore --version 5.0.6
+dotnet add package Microsoft.EntityFrameworkCore.Relational --version 5.0.6
+dotnet add package Microsoft.EntityFrameworkCore.Tools --version 5.0.6
+dotnet add package Microsoft.EntityFrameworkCore.SqlServer --version 5.0.6
+dotnet add package Microsoft.EntityFrameworkCore.Design --version 5.0.6
+
+conectar
+postgres
+
+dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL --version 5.0.6
+
+gerar primeira migration
+dotnet ef migrations add Base-inicial
