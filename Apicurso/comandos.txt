@@ -26,3 +26,8 @@ dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL --version 5.0.6
 
 gerar primeira migration
 dotnet ef migrations add Base-inicial
+
+
+snipets
+ctr - criar construtor
+prop - criar propridades calsses linhas dados

@@ -1,27 +1,31 @@
-using System.ComponentModel.DataAnnotations.Schema;
-using System;
-using System.Text;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.IdentityModel.Tokens.Jwt;
 using Apicurso.Filters;
 using Apicurso.Models.Usuarios;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.Security.Claims;
-using Apicurso.Infra.Data;
-using Microsoft.EntityFrameworkCore;
 using Apicurso.Business.Entities;
 using Swashbuckle.AspNetCore.Annotations;
+using Apicurso.Business.Repositories;
+using Apicurso.Configurations;
 
 namespace Apicurso.Controllers
 {
   [Route("api/v1/usuario")]
   [ApiController]
+
   public class usuarioController : ControllerBase
   {
+    //injeção das depedencias
+    private readonly IUsuarioRepository _usuarioRepository;
+    private readonly IAuthenticationService _authenticationService;
+
+    public usuarioController(
+      IUsuarioRepository usuarioRepository,
+      IAuthenticationService authenticationService
+      )
+    {
+      _usuarioRepository = usuarioRepository;
+      _authenticationService = authenticationService;
+    }
+
     [SwaggerResponse(statusCode: 200, description: "Sucesso ao Autenticar", Type = typeof(LoginViewModelInput))]
 
 
@@ -31,29 +35,26 @@ namespace Apicurso.Controllers
 
     public IActionResult Logar(LoginViewModelInput loginViewModelInput)
     {
+      var usuario = _usuarioRepository.ObterUsuario(loginViewModelInput.Login);
+
+      if (usuario == null)
+      {
+        return BadRequest("Erro nas credenciais.");
+      }
+
+      //if(usuario.Senha != loginViewModelInput.Senha.GerarSenhaCriptografada())
+      //{
+      //  return BadRequest("Erro nas credenciais ...")
+      //}
+
       var usuarioViewModelOutput = new UsuarioViewModelOutput()
       {
-        Codigo = 1,
-        Login = "AlbertoLotz",
-        Email = "alberto.lotz@pg.com"
+        Codigo = usuario.Codigo,
+        Login = loginViewModelInput.Login,
+        Email = usuario.Email
       };
 
-      var secret = Encoding.ASCII.GetBytes("c289a2e28f8211ee36398f1a3ef85afb"); //(_configuration.GetSection("JwtConfigurations:Secret").Value);
-      var symmetricSecurityKey = new SymmetricSecurityKey(secret);
-      var securityTokenDescriptor = new SecurityTokenDescriptor
-      {
-        Subject = new ClaimsIdentity(new Claim[]
-        {
-          new Claim(ClaimTypes.NameIdentifier, usuarioViewModelOutput.Codigo.ToString()),
-          new Claim(ClaimTypes.Name,usuarioViewModelOutput.Login.ToString()),
-          new Claim(ClaimTypes.Email,usuarioViewModelOutput.Email.ToString())
-        }),
-        Expires = DateTime.UtcNow.AddDays(1),
-        SigningCredentials = new SigningCredentials(symmetricSecurityKey, SecurityAlgorithms.HmacSha256Signature)
-      };
-      var jwtSecurityTokenHandler = new JwtSecurityTokenHandler();
-      var tokenGenerated = jwtSecurityTokenHandler.CreateToken(securityTokenDescriptor);
-      var token = jwtSecurityTokenHandler.WriteToken(tokenGenerated);
+      var token = _authenticationService.GerarToken(usuarioViewModelOutput);
 
       return Ok(new
       {
@@ -67,23 +68,19 @@ namespace Apicurso.Controllers
     [ValidacaoModelStateCustomizado]
     public IActionResult Registrar(RegistroViewModelInput registroViewModelInput)
     {
-      var optionsBuilder = new DbContextOptionsBuilder<CursoDbContext>();
-      optionsBuilder.UseNpgsql("Host=localhost;Database=Dio-Curso;Username=postgres;Password=docker");
-      CursoDbContext contexto = new CursoDbContext(optionsBuilder.Options);
-
-      var migracoesPendentes = contexto.Database.GetPendingMigrations();
-      if (migracoesPendentes.Count() > 0)
-      {
-        contexto.Database.Migrate();
-      }
+      //var migracoesPendentes = contexto.Database.GetPendingMigrations();
+      //if (migracoesPendentes.Count() > 0)
+      //{
+      //  contexto.Database.Migrate();
+      //}
 
       var usuario = new Usuario();
       usuario.Login = registroViewModelInput.Login;
       usuario.Senha = registroViewModelInput.Senha;
       usuario.Email = registroViewModelInput.Email;
 
-      contexto.Usuario.Add(usuario);
-      contexto.SaveChanges();
+      _usuarioRepository.Adicionar(usuario);
+      _usuarioRepository.Commit();
 
       return Created("", registroViewModelInput);
     }

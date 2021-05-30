@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using Apicurso.Models;
 using Microsoft.AspNetCore.Mvc.Filters;

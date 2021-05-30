@@ -1,19 +1,18 @@
 using System.Text;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Apicurso.Business.Repositories;
+using Apicurso.Infra.Data.Repositories;
+using Apicurso.Infra.Data;
+using Microsoft.EntityFrameworkCore;
+using Apicurso.Configurations;
+
 
 namespace Apicurso
 {
@@ -59,6 +58,16 @@ namespace Apicurso
          ValidateAudience = false
        };
      });
+
+
+      services.AddDbContext<CursoDbContext>(options =>
+      {
+        options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"));
+      });
+
+      services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+      services.AddScoped<IAuthenticationService, JwtService>();
+      services.AddScoped<ICursoRepository, CursoRepository>();
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
